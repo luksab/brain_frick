@@ -1,4 +1,3 @@
-#![feature(test)]
 pub mod bf_parse {
     use std::{
         cmp::{max, min},
@@ -61,17 +60,12 @@ pub mod bf_parse {
     pub struct BfInterpret {
         data: [u8; 30_000],
         ip: Pointer,
-        jump_back: Vec<Pointer>,
         dp: Pointer,
     }
 
     impl Debug for BfInterpret {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(
-                f,
-                "ip: {}, dp: {}, jb: {:?} \n{}",
-                self.ip, self.dp, self.jump_back, self
-            )
+            write!(f, "ip: {}, dp: {}\n{}", self.ip, self.dp, self)
         }
     }
 
@@ -81,7 +75,7 @@ pub mod bf_parse {
             let mut ret = String::new();
             ret += &format!("{:0>5}", self.ip);
             for i in max(self.ip, size) - size..min(self.ip + size, 30_000) {
-                match OpCode::from_u8(self.data[i as usize] & 15) {
+                match OpCode::from_u8(self.data[i as usize]) {
                     Some(inst) => {
                         if i == self.ip {
                             ret += &format!(
@@ -106,7 +100,7 @@ pub mod bf_parse {
                     ret += &format!("{}", color::Fg(color::Blue));
                 }
                 if false {
-                    match <OpCode as FromPrimitive>::from_u8(self.data[i as usize] & 15) {
+                    match <OpCode as FromPrimitive>::from_u8(self.data[i as usize]) {
                         Some(inst) => {
                             ret += &format!("{}", &inst);
                         }
@@ -188,18 +182,16 @@ pub mod bf_parse {
             Ok(BfInterpret {
                 data,
                 ip: 0,
-                jump_back: Vec::new(),
                 dp: (code.len()) as Pointer,
             })
         }
 
-        pub fn runAll(&mut self) -> Operation {
+        pub fn run_all(&mut self) -> Operation {
             Operation::Return()
         }
 
         pub fn step(&mut self) -> Operation {
-            match FromPrimitive::from_u8(self.data[self.ip as usize] & 15)
-                .expect("unknown Instruction")
+            match FromPrimitive::from_u8(self.data[self.ip as usize]).expect("unknown Instruction")
             {
                 OpCode::Right => {
                     self.dp += 1;
@@ -243,7 +235,7 @@ pub mod bf_parse {
                         let mut brack_count = 1;
                         while brack_count > 0 {
                             self.ip += 1;
-                            match FromPrimitive::from_u8(self.data[self.ip as usize] & 15)
+                            match FromPrimitive::from_u8(self.data[self.ip as usize])
                                 .expect("unknown Instruction")
                             {
                                 OpCode::LoopStart => brack_count += 1,
@@ -253,26 +245,26 @@ pub mod bf_parse {
                         }
                         self.ip += 1;
                     } else {
-                        self.jump_back.push(self.ip);
                         self.ip += 1;
                     }
                     Operation::LoopStart()
                 }
                 OpCode::LoopEnd => {
-                    let address = self.jump_back.last();
-                    let address = match address {
-                        Some(a) => a,
-                        None => {
-                            println!("\n{:?}", self);
-                            panic!("jump back empty");
-                        }
-                    };
-
                     //println!("data: {}", self.data[self.dp as usize]);
                     if self.data[self.dp as usize] != 0 {
-                        self.ip = *address + 1;
+                        let mut brack_count = 1;
+                        while brack_count > 0 {
+                            self.ip -= 1;
+                            match FromPrimitive::from_u8(self.data[self.ip as usize])
+                                .expect("unknown Instruction")
+                            {
+                                OpCode::LoopStart => brack_count -= 1,
+                                OpCode::LoopEnd => brack_count += 1,
+                                _ => {}
+                            }
+                        }
+                        self.ip += 1;
                     } else {
-                        self.jump_back.pop();
                         self.ip += 1;
                     }
                     Operation::LoopEnd()
@@ -315,6 +307,3 @@ pub mod bf_parse {
 }
 
 pub use bf_parse::BfInterpret;
-
-
-mod tests;

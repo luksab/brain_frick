@@ -1,5 +1,4 @@
 use core::arch::x86_64::_rdtsc;
-use std::time;
 use std::collections::VecDeque;
 
 use brain_frick::BfInterpret;
@@ -30,10 +29,10 @@ fn main() {
         "+[-[<<[+[--->]-[<<<]]]>>>-]>-.---.>..>.<<<<-.<+.>>>>>.>.<<.<-.?".to_string(),
     )
     .unwrap();
-    // for _ in 0..1000000 {
-    //     //println!("{:?}", BF);
-    //     BF.step();
+    // for code in bf {
+    //     println!("{}", code);
     // }
+    // return;
     let now = unsafe { _rdtsc() }; //time::Instant::now();
                                    //let mut num = 0;
     for code in bf {
