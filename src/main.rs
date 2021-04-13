@@ -9,6 +9,8 @@ use perfcnt::linux::SoftwareEventType as Software;
 use perfcnt::{AbstractPerfCounter, PerfCounter};
 use std::process;
 
+const TEST_COUNT: usize = 100_000;
+
 #[test]
 fn test_hello_world() -> () {
     use std::collections::VecDeque;
@@ -40,14 +42,14 @@ fn test_default() {
 
     let mut inst: u64 = 0;
     let now = Instant::now();
-    for _ in 0..1_000 {
+    for _ in 0..TEST_COUNT {
         pc.start().expect("Can not start the counter");
         //brainfuck::eval_string("+[-[<<[+[--->]-[<<<]]]>>>-]>-.---.>..>.<<<<-.<+.>>>>>.>.<<.<-.").unwrap();
         brainfuck::eval_string("+[-[<<[+[--->]-[<<<]]]>>>-]>---->><<<<-<+>>>>>><<<-").unwrap();
         inst += pc.read().expect("Can not read counter");
         pc.reset().expect("Can not reset the counter");
     }
-    let num = 10623 * 1_000; //3570766770-3894325034
+    let num = 10623 * TEST_COUNT; //3570766770-3894325034
     println!(
         "\nbrainfuck: {:?}, {}: {:.3}",
         now.elapsed(),
@@ -65,7 +67,7 @@ fn test_brain_frick() {
 
     let mut inst: u64 = 0;
     let now = Instant::now();
-    for _ in 0..1_000 {
+    for _ in 0..TEST_COUNT {
         let bf = BfInterpret::new(
             "+[-[<<[+[--->]-[<<<]]]>>>-]>-.---.>..>.<<<<-.<+.>>>>>.>.<<.<-.?".to_string(),
         )
@@ -93,7 +95,7 @@ fn test_brain_frick() {
         pc.reset().expect("Can not reset the counter");
         //println!("inst: {}, inst/op: {}", inst, (inst as f64) / num as f64);
     }
-    let num = 10623 * 1_000; //3570766770-3894325034
+    let num = 10623 * TEST_COUNT; //3570766770-3894325034
     println!(
         "\nbrain_frick: {:?}, {}: {:.3}",
         now.elapsed(),
