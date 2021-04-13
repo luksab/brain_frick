@@ -14,5 +14,7 @@ debug = false
 
 [dependencies]
 num-traits = "0.2"
-num-derive = "0.2"
+num-derive = "0.3.3"
 termion = "*"
+x86 = { version = "0.37.0", features = ["performance-counter"] }
+perfcnt = "*"
