@@ -30,7 +30,8 @@ fn test_hello_world() -> () {
     assert!(num == 10623);
 }
 
-fn main() {
+fn test_default() {
+    use brainfuck;
     let mut pc: PerfCounter = Builder::from_software_event(Software::TaskClock)
         .on_all_cpus()
         .for_pid(process::id() as i32)
@@ -39,7 +40,32 @@ fn main() {
 
     let mut inst: u64 = 0;
     let now = Instant::now();
-    for _ in 0..1_000_00 {
+    for _ in 0..1_000 {
+        pc.start().expect("Can not start the counter");
+        //brainfuck::eval_string("+[-[<<[+[--->]-[<<<]]]>>>-]>-.---.>..>.<<<<-.<+.>>>>>.>.<<.<-.").unwrap();
+        brainfuck::eval_string("+[-[<<[+[--->]-[<<<]]]>>>-]>---->><<<<-<+>>>>>><<<-").unwrap();
+        inst += pc.read().expect("Can not read counter");
+        pc.reset().expect("Can not reset the counter");
+    }
+    let num = 10623 * 1_000; //3570766770-3894325034
+    println!(
+        "\nbrainfuck: {:?}, {}: {:.3}",
+        now.elapsed(),
+        inst,
+        inst as f64 / num as f64
+    );
+}
+
+fn test_brain_frick() {
+    let mut pc: PerfCounter = Builder::from_software_event(Software::TaskClock)
+        .on_all_cpus()
+        .for_pid(process::id() as i32)
+        .finish()
+        .expect("Could not create counter");
+
+    let mut inst: u64 = 0;
+    let now = Instant::now();
+    for _ in 0..1_000 {
         let bf = BfInterpret::new(
             "+[-[<<[+[--->]-[<<<]]]>>>-]>-.---.>..>.<<<<-.<+.>>>>>.>.<<.<-.?".to_string(),
         )
@@ -48,7 +74,7 @@ fn main() {
         //     println!("{}", code);
         // }
         // return;
-        
+
         //let mut num = 0;
 
         pc.start().expect("Can not start the counter");
@@ -67,6 +93,16 @@ fn main() {
         pc.reset().expect("Can not reset the counter");
         //println!("inst: {}, inst/op: {}", inst, (inst as f64) / num as f64);
     }
-    let num = 10623*1_000_00;//3570766770-3894325034
-    println!("\n{:?}, {}: {:.3}", now.elapsed(), inst, inst as f64 / num as f64);
+    let num = 10623 * 1_000; //3570766770-3894325034
+    println!(
+        "\nbrain_frick: {:?}, {}: {:.3}",
+        now.elapsed(),
+        inst,
+        inst as f64 / num as f64
+    );
+}
+
+fn main() {
+    test_default();
+    test_brain_frick();
 }
